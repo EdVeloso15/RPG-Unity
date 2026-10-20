@@ -1,0 +1,78 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/Lobby/Lobby.uss?fileID=7433441132597879392&amp;guid=55c3f3201fd8ccb4198cd5d150069237&amp;type=3#Lobby"/>
+    <ui:VisualElement name="Root" class="screen-root" style="flex-grow: 1; flex-direction: column; width: 100%; height: 100%; align-items: center; justify-content: center; background-color: rgb(18, 18, 18); display: flex; color: rgb(255, 255, 255);">
+        <ui:VisualElement name="MainMenuPanel" enabled="true" class="screen" style="flex-grow: 1; width: 560px; height: 620px; padding-top: 40px; padding-right: 40px; padding-left: 40px; padding-bottom: 40px; align-items: center; background-color: rgb(40, 40, 43); display: none; color: rgb(245, 245, 247); flex-basis: initial;">
+            <ui:Label text="Online" name="Title" class="title" style="width: 100%; height: 60px; margin-bottom: 25px; padding-bottom: 0; padding-right: 0; padding-top: 0; padding-left: 0; margin-left: 0; margin-right: 0; margin-top: 0; -unity-text-align: middle-center; font-size: 40px;"/>
+            <ui:Label text="Nome do Jogador" name="NameLabel" class="field-label" style="width: 100%; height: 28px; -unity-text-align: middle-left; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0;"/>
+            <ui:TextField label="" placeholder-text="Seu Nome" name="PlayerNameInput" class="text-field" style="margin-top: 0; margin-right: 0; margin-bottom: 18px; margin-left: 0; background-size: 100% 100%; width: 100%; height: 48px; color: rgb(0, 0, 0);"/>
+            <ui:Button text="CRIAR PARTIDA" name="CreateButton" class="primary-button" style="margin-bottom: 28px; margin-left: 0; margin-top: 0; margin-right: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; width: 100%; height: 50px; background-color: rgb(211, 47, 47);"/>
+            <ui:VisualElement name="JoinSection" style="flex-grow: 1; width: 100%; height: auto; flex-basis: initial;">
+                <ui:Label text="Código da Partida" name="JoinCodeLabel" class="field-label" style="width: 100%; height: 28px;"/>
+                <ui:TextField label="" placeholder-text="Digite o Código da Partida" name="JoinCodeInput" class="text-field" style="width: 100%; height: 48px; margin-top: 0; margin-right: 0; margin-bottom: 18px; margin-left: 0; color: rgb(0, 0, 0);"/>
+                <ui:Button text="ENTRAR NA PARTIDA" name="JoinButton" class="primary-button" style="width: 100%; height: 50px; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; background-color: rgb(211, 47, 47);"/>
+            </ui:VisualElement>
+            <ui:Label text="..." name="MainStatus" class="status-text" style="width: 100%; height: 45px; margin-top: 20px; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; -unity-text-align: middle-center;"/>
+        </ui:VisualElement>
+        <ui:VisualElement name="LobbyPanel" class="screen" style="flex-grow: 1; width: 720px; height: 760px; padding-top: 30px; padding-right: 36px; padding-bottom: 30px; padding-left: 36px; align-items: center; color: rgb(245, 245, 247); flex-basis: initial; display: flex; background-color: rgb(40, 40, 43);">
+            <ui:VisualElement name="LobbyHeader" class="lobby-header" style="flex-grow: 1; width: 100%; height: 55px; flex-direction: row; justify-content: space-between; align-items: center; align-self: auto; flex-basis: initial;">
+                <ui:Label text="LOBBY" name="LobbyTitle" style="width: 70%; height: 50px; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; font-size: 32px; -unity-text-align: middle-left;"/>
+                <ui:Label text="0/4" name="PlayerCount" style="font-size: 32px; width: 30%; height: 50px; -unity-text-align: middle-center;"/>
+            </ui:VisualElement>
+            <ui:VisualElement name="SessionInfo" class="session-info" style="flex-grow: 1; width: 100%; height: 60px; flex-direction: row; align-items: center; justify-content: space-between; align-self: auto; flex-basis: initial;">
+                <ui:Label text="Online Game" name="SessionName" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; width: 50%; height: 40px; -unity-text-align: middle-left;"/>
+                <ui:Label text="Código: ABC123" name="JoinCode" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; width: 50%; height: 40px; -unity-text-align: middle-center;"/>
+            </ui:VisualElement>
+            <ui:VisualElement name="PlayersContainer" class="players-container" style="flex-grow: 1; width: 100%; height: 360px; flex-basis: initial;">
+                <ui:VisualElement name="PlayerSlot_1" class="player-slot" style="flex-grow: 0; width: 100%; height: 76px; margin-bottom: 8px; flex-direction: row; align-items: center; flex-basis: initial;">
+                    <ui:VisualElement name="Avatar" class="player-avatar" style="flex-grow: 1; width: 48px; height: 48px; padding-right: 0; margin-right: 14px; align-self: auto; aspect-ratio: auto; min-width: 32px; min-height: 32px; max-width: 48px; max-height: 48px;"/>
+                    <ui:VisualElement name="PlayerInfo" class="player-info" style="flex-grow: 1; height: 60px; justify-content: center;">
+                        <ui:Label text="Aguardando Jogador..." name="PlayerName" class="player-name" style="width: 100%; height: 28px; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; font-size: 18px;"/>
+                        <ui:Label text="JOGADOR" name="PlayerRole" class="player-role" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; font-size: 13px; width: 100%; height: 20px;"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement name="ReadyIndicator" style="flex-grow: 1; width: auto; height: 60px;">
+                        <ui:Image name="ReadyActive" style="height: 60px; width: 60px; align-self: flex-end; overflow: visible; position: absolute; background-image: url(&quot;project://database/Assets/Images/Ready.png?fileID=2800000&amp;guid=6986b608c61c4ed48b82ed3003dda17a&amp;type=3#Ready&quot;); display: none;"/>
+                        <ui:Image name="ReadyInactive" style="height: 60px; width: 60px; align-self: flex-end; overflow: visible; position: absolute; background-image: url(&quot;project://database/Assets/Images/Not_Ready.png?fileID=2800000&amp;guid=cc00e38a1e841234eba4d5fd536d8357&amp;type=3#Not_Ready&quot;);"/>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="PlayerSlot_2" class="player-slot" style="flex-grow: 0; width: 100%; height: 76px; margin-bottom: 8px; flex-direction: row; align-items: center; flex-basis: initial;">
+                    <ui:VisualElement name="Avatar" class="player-avatar" style="flex-grow: 1; width: 48px; height: 48px; padding-right: 0; margin-right: 14px; align-self: auto; aspect-ratio: auto; min-width: 32px; min-height: 32px; max-width: 48px; max-height: 48px;"/>
+                    <ui:VisualElement name="PlayerInfo" class="player-info" style="flex-grow: 1; height: 60px; justify-content: center;">
+                        <ui:Label text="Aguardando Jogador..." name="PlayerName" class="player-name" style="width: 100%; height: 28px; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; font-size: 18px;"/>
+                        <ui:Label text="JOGADOR" name="PlayerRole" class="player-role" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; font-size: 13px; width: 100%; height: 20px;"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement name="ReadyIndicator" style="flex-grow: 1; width: auto; height: 60px;">
+                        <ui:Image name="ReadyActive" style="height: 60px; width: 60px; align-self: flex-end; overflow: visible; position: absolute; background-image: url(&quot;project://database/Assets/Images/Ready.png?fileID=2800000&amp;guid=6986b608c61c4ed48b82ed3003dda17a&amp;type=3#Ready&quot;); display: none;"/>
+                        <ui:Image name="ReadyInactive" style="height: 60px; width: 60px; align-self: flex-end; overflow: visible; position: absolute; background-image: url(&quot;project://database/Assets/Images/Not_Ready.png?fileID=2800000&amp;guid=cc00e38a1e841234eba4d5fd536d8357&amp;type=3#Not_Ready&quot;);"/>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="PlayerSlot_3" class="player-slot" style="flex-grow: 0; width: 100%; height: 76px; margin-bottom: 8px; flex-direction: row; align-items: center; flex-basis: initial;">
+                    <ui:VisualElement name="Avatar" class="player-avatar" style="flex-grow: 1; width: 48px; height: 48px; padding-right: 0; margin-right: 14px; align-self: auto; aspect-ratio: auto; min-width: 32px; min-height: 32px; max-width: 48px; max-height: 48px;"/>
+                    <ui:VisualElement name="PlayerInfo" class="player-info" style="flex-grow: 1; height: 60px; justify-content: center;">
+                        <ui:Label text="Aguardando Jogador..." name="PlayerName" class="player-name" style="width: 100%; height: 28px; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; font-size: 18px;"/>
+                        <ui:Label text="JOGADOR" name="PlayerRole" class="player-role" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; font-size: 13px; width: 100%; height: 20px;"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement name="ReadyIndicator" style="flex-grow: 1; width: auto; height: 60px;">
+                        <ui:Image name="ReadyActive" style="height: 60px; width: 60px; align-self: flex-end; overflow: visible; position: absolute; background-image: url(&quot;project://database/Assets/Images/Ready.png?fileID=2800000&amp;guid=6986b608c61c4ed48b82ed3003dda17a&amp;type=3#Ready&quot;); display: none;"/>
+                        <ui:Image name="ReadyInactive" style="height: 60px; width: 60px; align-self: flex-end; overflow: visible; position: absolute; background-image: url(&quot;project://database/Assets/Images/Not_Ready.png?fileID=2800000&amp;guid=cc00e38a1e841234eba4d5fd536d8357&amp;type=3#Not_Ready&quot;);"/>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement name="PlayerSlot_4" class="player-slot" style="flex-grow: 0; width: 100%; height: 76px; margin-bottom: 8px; flex-direction: row; align-items: center; flex-basis: initial;">
+                    <ui:VisualElement name="Avatar" class="player-avatar" style="flex-grow: 1; width: 48px; height: 48px; padding-right: 0; margin-right: 14px; align-self: auto; aspect-ratio: auto; min-width: 32px; min-height: 32px; max-width: 48px; max-height: 48px;"/>
+                    <ui:VisualElement name="PlayerInfo" class="player-info" style="flex-grow: 1; height: 60px; justify-content: center;">
+                        <ui:Label text="Aguardando Jogador..." name="PlayerName" class="player-name" style="width: 100%; height: 28px; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; font-size: 18px;"/>
+                        <ui:Label text="JOGADOR" name="PlayerRole" class="player-role" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; font-size: 13px; width: 100%; height: 20px;"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement name="ReadyIndicator" style="flex-grow: 1; width: auto; height: 60px;">
+                        <ui:Image name="ReadyActive" style="height: 60px; width: 60px; align-self: flex-end; overflow: visible; position: absolute; background-image: url(&quot;project://database/Assets/Images/Ready.png?fileID=2800000&amp;guid=6986b608c61c4ed48b82ed3003dda17a&amp;type=3#Ready&quot;); display: none;"/>
+                        <ui:Image name="ReadyInactive" style="height: 60px; width: 60px; align-self: flex-end; overflow: visible; position: absolute; background-image: url(&quot;project://database/Assets/Images/Not_Ready.png?fileID=2800000&amp;guid=cc00e38a1e841234eba4d5fd536d8357&amp;type=3#Not_Ready&quot;);"/>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:Label text="Aguardando jogadores..." name="LobbyStatus" class="status-text" style="width: 100%; height: 40px; -unity-text-align: middle-center; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0;"/>
+            <ui:VisualElement name="ButtonPanel" style="flex-grow: 1; margin-top: 14px; flex-direction: row; justify-content: center; align-items: center; height: 60px; width: 100%;">
+                <ui:Button text="PRONTO" name="ReadyButton" selectable="false" class="primary-button" style="margin-top: 0; margin-right: 32px; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; width: 180px; height: 48px;"/>
+                <ui:Button text="SAIR" name="LeaveButton" class="secundary-button" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; width: 180px; height: 48px; background-color: rgba(211, 47, 47, 0);"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

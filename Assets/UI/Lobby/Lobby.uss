@@ -1,0 +1,119 @@
+VisualElement {}
+
+.primary-button {
+    /* Fundo Sólido usando a cor de 10% (Vermelho Universal) */
+    background-color: #D32F2F;
+    
+    /* Mantemos a largura da borda igual ao secundário para alinhar perfeitamente no layout */
+    border-width: 2px;
+    border-color: #D32F2F;
+    
+    /* Raio da borda consistente com o restante da interface */
+    border-radius: 8px;
+    
+    /* Texto em Branco Puro (#FFFFFF) para contraste máximo (ratio > 4.5:1) */
+    color: #FFFFFF;
+    font-size: 16px;
+    -unity-font-style: bold; /* Peso em negrito para reforçar que é a ação principal */
+    -unity-text-align: middle-center;
+    
+    /* Transições suaves (incluindo a cor da borda para o foco) */
+    transition-property: background-color, border-color, scale;
+    transition-duration: 0.2s, 0.2s, 0.1s;
+    transition-timing-function: ease-out, ease-out, ease-in-out;
+}
+
+/* Estado de Hover (quando o mouse passa por cima) */
+.primary-button:hover {
+    /* Um vermelho levemente mais claro/vibrante (#E53935) para dar feedback visual */
+    background-color: #E53935;
+    border-color: #E53935;
+    /* A FAZER - Cursor muda para indicar que é clicável */
+    /* cursor: link; */
+}
+
+/* Estado Ativo (quando o botão é pressionado) */
+.primary-button:active {
+    /* Um vermelho mais escuro (#B71C1C) simulando sombra/profundidade */
+    background-color: #B71C1C;
+    border-color: #B71C1C;
+    scale: 0.95; /* Efeito tátil de afundar, igual ao secundário */
+}
+
+/* Foco (Essencial para a navegação por controle/teclado WASD) */
+.primary-button:focus {
+    /* Borda branca pura destacando a seleção sobre o fundo vermelho */
+    border-color: #FFFFFF;
+}
+
+.secundary-button {
+    /* Fundo Transparente */
+    background-color: transparent;
+    
+    /* Borda usando a cor de 10% (Vermelho Universal: #D32F2F) */
+    border-width: 2px;
+    border-color: #D32F2F;
+    
+    /* Raio da borda para suavizar (ajuste conforme a arte do seu RPG) */
+    border-radius: 8px;
+    
+    /* Configuração do Texto (Usando a mesma cor da borda ou branco puro dependendo do contraste do fundo) */
+    color: #F5F5F7; 
+    font-size: 16px;
+    -unity-text-align: middle-center;
+    
+    
+    /* Transição suave para hover e clique */
+    transition-property: background-color, color, scale;
+    transition-duration: 0.2s, 0.2s, 0.1s;
+    transition-timing-function: ease-out, ease-out, ease-in-out;
+}
+
+/* Estado ATIVADO (Toggle ON) - Simula um botão afundado e 'travado' */
+.primary-button.is-toggled {
+    /* Fica com o vermelho mais escuro da paleta, indicando profundidade (afundado) */
+    background-color: #B71C1C; 
+    
+    /* Borda branca pura para dar um destaque visual forte de 'LIGADO' */
+    border-color: #FFFFFF; 
+    
+    /* Escala permanentemente reduzida para reforçar a sensação física de pressionado */
+    scale: 0.96; 
+    
+    /* Cor do texto sutilmente esmaecida (um cinza muito claro) para não ofuscar a borda */
+    color: #E0E0E0; 
+}
+
+/* Hover do botão quando ele já está ativado (dica de que clicar novamente vai desativar) */
+.primary-button.is-toggled:hover {
+    background-color: #D32F2F; /* Volta levemente para o vermelho padrão */
+    border-color: #FFFFFF;
+    color: #FFFFFF;
+}
+
+/* Foco do botão ativado (para a navegação WASD/Controle) */
+.primary-button.is-toggled:focus {
+    /* Engrossa a borda ou mantém a clareza para o jogador saber onde o cursor está */
+    border-color: #FFFFFF;
+    border-width: 3px; 
+}
+
+/* Estado de Hover (quando o mouse passa por cima) */
+.secundary-button:hover {
+    /* Preenche levemente o fundo com vermelho, mantendo a hierarquia visual baixa */
+    background-color: rgba(211, 47, 47, 0.15); /* #D32F2F com 15% de opacidade */
+    /* A FAZER - Cursor muda para indicar que é clicável */
+    /* cursor: link; */
+}
+
+/* Estado Ativo (quando o botão está sendo pressionado/clicado) */
+.secundary-button:active {
+    background-color: rgba(211, 47, 47, 0.3); /* Fica um pouco mais sólido no clique */
+    scale: 0.95; /* Efeito tátil de "afundar" o botão */
+}
+
+/* Foco (Essencial para navegação por controle/teclado no seu multiplayer local) */
+.secundary-button:focus {
+    border-color: #FFFFFF; /* Muda a borda para branco para destacar quem está selecionado */
+    background-color: rgba(211, 47, 47, 0.2);
+}
