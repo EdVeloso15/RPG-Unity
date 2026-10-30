@@ -7,12 +7,12 @@ public class NetworkPlayerSpawner : MonoBehaviour
     [SerializeField]
     private Transform[] spawnPoints;
 
-    private void Awake()
+    private void Start()
     {
         if (NetworkManager.Singleton == null)
         {
             Debug.LogError(
-                "[NetworkPlayerSpawner] NetworkManager não encontrado."
+                "[NetworkPlayerSpawner] NetworkManager não encontrado no Start."
             );
 
             return;
@@ -20,6 +20,10 @@ public class NetworkPlayerSpawner : MonoBehaviour
 
         NetworkManager.Singleton.ConnectionApprovalCallback =
             ApprovalCheck;
+
+        Debug.Log(
+            "[NetworkPlayerSpawner] ConnectionApprovalCallback configurado."
+        );
     }
 
     private void ApprovalCheck(

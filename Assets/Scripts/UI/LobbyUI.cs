@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -51,7 +52,7 @@ public class LobbyUI : MonoBehaviour
 
     private Button leaveButton;
     private Button readyButton;
-
+    private Button copyCodeButton;
     private bool isPlayerReady = false;
 
     // ---------------------------------------------------------
@@ -65,6 +66,7 @@ public class LobbyUI : MonoBehaviour
     // ---------------------------------------------------------
 
     private bool operationInProgress;
+    private bool resettingReadyAfterDeparture;
 
     // ---------------------------------------------------------
     // Countdown
@@ -110,6 +112,7 @@ public class LobbyUI : MonoBehaviour
 
     private void OnDisable()
     {
+        CancelCountdown();
         panelRenderer.UnregisterUIReloadCallback(
             OnUIReload
         );
@@ -207,6 +210,11 @@ public class LobbyUI : MonoBehaviour
         joinCode =
             root.Q<Label>(
                 "JoinCode"
+            );
+        
+        copyCodeButton =
+            root.Q<Button>(
+                "CopyJoinCodeButton"
             );
 
         playerCount =
@@ -309,6 +317,12 @@ public class LobbyUI : MonoBehaviour
             leaveButton.clicked +=
                 OnLeaveClicked;
         }
+
+        if (copyCodeButton != null)
+        {
+            copyCodeButton.clicked +=
+                OnCopyCodeClicked;
+        }
     }
 
     private void UnregisterUIEvents()
@@ -336,6 +350,12 @@ public class LobbyUI : MonoBehaviour
             leaveButton.clicked -=
                 OnLeaveClicked;
         }
+
+        if (copyCodeButton != null)
+        {
+            copyCodeButton.clicked -=
+                OnCopyCodeClicked;
+        }
     }
 
     // ---------------------------------------------------------
@@ -354,6 +374,9 @@ public class LobbyUI : MonoBehaviour
 
         sessionManager.SessionEnded +=
             OnSessionEnded;
+        
+        sessionManager.PlayerLeftSession +=
+            OnPlayerLeftSession;
     }
 
     private void UnsubscribeFromNetwork()
@@ -368,6 +391,9 @@ public class LobbyUI : MonoBehaviour
 
         sessionManager.SessionEnded -=
             OnSessionEnded;
+        
+        sessionManager.PlayerLeftSession -=
+            OnPlayerLeftSession;
     }
 
     // ---------------------------------------------------------
@@ -602,6 +628,7 @@ public class LobbyUI : MonoBehaviour
                     .SetEmpty();
             }
         }
+        UpdateCountdownState();
     }
 
     // ---------------------------------------------------------
@@ -655,17 +682,37 @@ public class LobbyUI : MonoBehaviour
         if (isPlayerReady)
         {
             readyButton.text = "CANCELAR";
-            SetLobbyStatus(
-                "Você está pronto."
-            );
         }
         else
         {
             readyButton.text = "PRONTO";
-            SetLobbyStatus(
-                "Aguardando você ficar pronto."
-            );
         }
+    }
+    private bool AreAllPlayersReady()
+    {
+        if (sessionManager == null ||
+            !sessionManager.IsInSession)
+        {
+            return false;
+        }
+
+        List<LobbyPlayerData> players =
+            sessionManager.GetLobbyPlayers();
+
+        if (players.Count == 0)
+        {
+            return false;
+        }
+
+        foreach (LobbyPlayerData player in players)
+        {
+            if (!player.IsReady)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     // ---------------------------------------------------------
@@ -674,6 +721,8 @@ public class LobbyUI : MonoBehaviour
 
     private async void OnLeaveClicked()
     {
+        CancelCountdown();
+
         if (operationInProgress)
         {
             return;
@@ -681,7 +730,6 @@ public class LobbyUI : MonoBehaviour
 
         operationInProgress =
             true;
-
         if (leaveButton != null)
         {
             leaveButton.SetEnabled(
@@ -696,14 +744,11 @@ public class LobbyUI : MonoBehaviour
         await sessionManager
             .LeaveSessionAsync();
 
-        operationInProgress =
-            false;
+        operationInProgress = false;
 
         if (leaveButton != null)
         {
-            leaveButton.SetEnabled(
-                true
-            );
+            leaveButton.SetEnabled(true);
         }
 
         ShowMainMenu();
@@ -713,10 +758,90 @@ public class LobbyUI : MonoBehaviour
         );
     }
 
+    private async void OnPlayerLeftSession()
+    {
+        if (sessionManager == null ||
+            !sessionManager.IsInSession)
+        {
+            return;
+        }
+
+        if (resettingReadyAfterDeparture)
+        {
+            return;
+        }
+
+        resettingReadyAfterDeparture = true;
+
+        Debug.Log(
+            "[LobbyUI] Um jogador saiu. " +
+            "Redefinindo o estado Ready local."
+        );
+
+        // 1. Interrompe a contagem regressiva.
+        if (countdownCoroutine != null)
+        {
+            StopCoroutine(countdownCoroutine);
+            countdownCoroutine = null;
+        }
+
+        countdownRunning = false;
+
+        // 2. Atualiza imediatamente o estado visual local.
+        isPlayerReady = false;
+
+        if (readyButton != null)
+        {
+            readyButton.RemoveFromClassList("is-toggled");
+            readyButton.text = "PRONTO";
+            readyButton.SetEnabled(false);
+        }
+
+        SetLobbyStatus(
+            "Um jogador saiu. " +
+            "Todos precisam ficar prontos novamente."
+        );
+
+        // 3. Salva Ready=false para o jogador local.
+        bool success = await sessionManager.SetReadyAsync(false);
+
+        // 4. Libera o botão após a operação.
+        if (readyButton != null)
+        {
+            readyButton.SetEnabled(true);
+        }
+
+        resettingReadyAfterDeparture = false;
+
+        if (!success)
+        {
+            Debug.LogError(
+                "[LobbyUI] Não foi possível redefinir " +
+                "o estado Ready após a saída de um jogador."
+            );
+
+            SetLobbyStatus(
+                "Falha ao redefinir o estado de pronto. " +
+                "Tente novamente."
+            );
+
+            return;
+        }
+
+        // 5. Atualiza os jogadores e seus indicadores.
+        RefreshLobby();
+
+        SetLobbyStatus(
+            "Um jogador saiu. " +
+            "Todos precisam ficar prontos novamente."
+        );
+    }
+
     private void OnSessionEnded()
     {
-        operationInProgress =
-            false;
+        CancelCountdown();
+
+        operationInProgress = false;
 
         ShowMainMenu();
 
@@ -862,5 +987,130 @@ public class LobbyUI : MonoBehaviour
                 "LeaveButton não encontrado."
             );
         }
+    }
+    // ---------------------------------------------------------
+    // Countdown
+    // ---------------------------------------------------------
+    private void UpdateCountdownState()
+    {
+        if (sessionManager == null ||
+            !sessionManager.IsInSession)
+        {
+            CancelCountdown();
+            return;
+        }
+
+        if (!AreAllPlayersReady())
+        {
+            CancelCountdown();
+
+            SetLobbyStatus(
+                "Aguardando todos os jogadores ficarem prontos..."
+            );
+
+            return;
+        }
+
+        if (countdownRunning)
+        {
+            return;
+        }
+
+        countdownCoroutine =
+            StartCoroutine(CountdownRoutine());
+
+        countdownRunning = true;
+    }
+    private IEnumerator CountdownRoutine()
+    {
+        for (int seconds = 5; seconds >= 1; seconds--)
+        {
+            if (!AreAllPlayersReady())
+            {
+                countdownCoroutine = null;
+                countdownRunning = false;
+
+                SetLobbyStatus(
+                    "Aguardando todos os jogadores ficarem prontos..."
+                );
+
+                yield break;
+            }
+
+            SetLobbyStatus(
+                $"Partida iniciando em {seconds}..."
+            );
+
+            yield return new WaitForSeconds(1f);
+        }
+
+        // Confere novamente antes de concluir a contagem.
+        if (!AreAllPlayersReady())
+        {
+            countdownCoroutine = null;
+            countdownRunning = false;
+
+            SetLobbyStatus(
+                "Aguardando todos os jogadores ficarem prontos..."
+            );
+
+            yield break;
+        }
+
+        countdownCoroutine = null;
+        countdownRunning = false;
+
+        SetLobbyStatus("Iniciando partida...");
+
+        Debug.Log(
+            "[LobbyUI] Contagem regressiva concluída."
+        );
+
+        // A transição de cena será implementada
+        // em uma etapa posterior.
+    }
+    private void CancelCountdown()
+    {
+        if (countdownCoroutine != null)
+        {
+            StopCoroutine(countdownCoroutine);
+            countdownCoroutine = null;
+        }
+
+        countdownRunning = false;
+    }
+    // ---------------------------------------------------------
+    // Copiar Código da Sala
+    // ---------------------------------------------------------
+    private void OnCopyCodeClicked()
+    {
+        if (sessionManager == null ||
+            !sessionManager.IsInSession)
+        {
+            SetLobbyStatus(
+                "Você não está em uma partida."
+            );
+
+            return;
+        }
+
+        string code = sessionManager.JoinCode;
+
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            SetLobbyStatus(
+                "Código da sala indisponível."
+            );
+
+            return;
+        }
+
+        GUIUtility.systemCopyBuffer = code;
+
+        SetLobbyStatus(
+            "Código copiado! Compartilhe com seus amigos."
+        );
+
+        Debug.Log("[LobbyUI] Código da sala copiado.");
     }
 }

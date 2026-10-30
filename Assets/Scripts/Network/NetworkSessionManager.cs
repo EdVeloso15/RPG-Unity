@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using Unity.Services.Multiplayer;
 using UnityEngine;
 using UnityEngine.UIElements;
+using Unity.Netcode;
+using Unity.Netcode.Transports.UTP;
 
 public class NetworkSessionManager : MonoBehaviour
 {
@@ -51,6 +53,7 @@ public class NetworkSessionManager : MonoBehaviour
 
     public event Action LobbyChanged;
     public event Action SessionEnded;
+    public event Action PlayerLeftSession;
 
     private void Awake()
     {
@@ -260,12 +263,22 @@ public class NetworkSessionManager : MonoBehaviour
                 );
             }
 
+            LogNetworkState(
+                "Antes de JoinSessionByCodeAsync"
+            );
+            
+            LogTransportState("Antes de entrar na sessão");
+
             CurrentSession =
                 await MultiplayerService.Instance
                     .JoinSessionByCodeAsync(
                         joinCode,
                         joinOptions
                     );
+            
+            LogNetworkState(
+                "Depois de JoinSessionByCodeAsync"
+            );
 
             SubscribeToSession(CurrentSession);
 
@@ -286,7 +299,11 @@ public class NetworkSessionManager : MonoBehaviour
             Debug.LogError(
                 $"[Network] Falha ao entrar na sessão.\n" +
                 $"Error: {ex.Error}\n" +
-                $"Message: {ex.Message}"
+                $"Exceção completa:\n{ex}"
+            );
+
+            LogNetworkState(
+                "Depois da falha em JoinSessionByCodeAsync"
             );
 
             LastErrorMessage =
@@ -525,6 +542,9 @@ public class NetworkSessionManager : MonoBehaviour
         Debug.Log(
             $"[Lobby] Jogador saiu: {playerId}"
         );
+        // Avisa as interfaces locais para cancelar
+        // o Countdown e remover o estado Ready.
+        PlayerLeftSession?.Invoke();
 
         NotifyLobbyChanged();
     }
@@ -754,6 +774,61 @@ public class NetworkSessionManager : MonoBehaviour
                 )
             }
         };
+    }
+    private void LogNetworkState(string context)
+    {
+        NetworkManager networkManager =
+            NetworkManager.Singleton;
+
+        if (networkManager == null)
+        {
+            Debug.LogWarning(
+                $"[NetworkDiagnostic] {context} | " +
+                "NetworkManager.Singleton = null"
+            );
+
+            return;
+        }
+
+        Debug.Log(
+            $"[NetworkDiagnostic] {context} | " +
+            $"IsListening={networkManager.IsListening} | " +
+            $"IsClient={networkManager.IsClient} | " +
+            $"IsServer={networkManager.IsServer} | " +
+            $"IsHost={networkManager.IsHost}"
+        );
+    }
+
+    private void LogTransportState(string context)
+    {
+        NetworkManager nm = NetworkManager.Singleton;
+
+        if (nm == null)
+        {
+            Debug.LogError(
+                $"[NetworkDiagnostic] {context} | " +
+                "NetworkManager.Singleton = null"
+            );
+            return;
+        }
+
+        Debug.Log(
+            $"[NetworkDiagnostic] {context} | " +
+            $"NetworkManagerId={nm.GetEntityId()} | " +
+            $"IsListening={nm.IsListening} | " +
+            $"IsClient={nm.IsClient} | " +
+            $"IsServer={nm.IsServer} | " +
+            $"IsHost={nm.IsHost} | " +
+            $"Transport={nm.NetworkConfig.NetworkTransport}"
+        );
+
+        UnityTransport transport =
+            nm.NetworkConfig.NetworkTransport as UnityTransport;
+
+        Debug.Log(
+            $"[NetworkDiagnostic] {context} | " +
+            $"UnityTransport encontrado={transport != null}"
+        );
     }
 }
 
