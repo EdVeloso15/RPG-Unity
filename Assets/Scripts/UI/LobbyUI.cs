@@ -1061,13 +1061,33 @@ public class LobbyUI : MonoBehaviour
         countdownRunning = false;
 
         SetLobbyStatus("Iniciando partida...");
+        Debug.Log("[LobbyUI] Contagem regressiva concluída.");
 
-        Debug.Log(
-            "[LobbyUI] Contagem regressiva concluída."
-        );
+        NetworkSceneTransition transition = NetworkSceneTransition.Instance;
 
-        // A transição de cena será implementada
-        // em uma etapa posterior.
+        if (transition == null)
+        {
+            Debug.LogError("[LobbyUI] NetworkSceneTransition não encontrado.");
+            SetLobbyStatus("Erro ao iniciar a partida.");
+            yield break;
+        }
+
+        // Todos os jogadores exibem o Loading.
+        transition.ShowWaitingForHost();
+
+        // Somente o Host inicia a transição de cena.
+        if (!sessionManager.IsHost)
+        {
+            SetLobbyStatus("Aguardando o anfitrião iniciar a partida...");
+            yield break;
+        }
+
+        bool success = transition.StartGameTransition();
+
+        if (!success)
+        {
+            SetLobbyStatus("Não foi possível iniciar a partida.");
+        }
     }
     private void CancelCountdown()
     {
