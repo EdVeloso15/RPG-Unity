@@ -137,6 +137,24 @@ public class NetworkPlayerController : NetworkBehaviour
         // O servidor posteriormente lê esse valor.
         movementDirection.Value = worldDirection;
     }
+    public void SetMovementLocked(bool locked)
+    {
+        if (!IsServer)
+            return;
+
+        playerMovement.SetMovementEnabled(!locked);
+
+        if (locked)
+        {
+            movementDirection.Value = Vector3.zero;
+        }
+
+        Debug.Log(
+            $"[NetworkPlayerController] Movimento " +
+            $"{(locked ? "bloqueado" : "liberado")} | " +
+            $"ClientId: {OwnerClientId}"
+        );
+    }
 
     private void Update()
     {

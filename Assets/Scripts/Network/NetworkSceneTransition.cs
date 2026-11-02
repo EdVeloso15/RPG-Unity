@@ -19,11 +19,14 @@ public class NetworkSceneTransition : MonoBehaviour
 
     private LoadingScreenController loadingScreen;
     private NetworkManager networkManager;
+    private NetworkPlayerSpawner playerSpawner;
 
     private Coroutine loadingCoroutine;
     private Coroutine hideCoroutine;
 
     private bool transitionStarted;
+    private bool sceneEventsRegistered;
+
 
     private void Awake()
     {
@@ -53,37 +56,45 @@ public class NetworkSceneTransition : MonoBehaviour
             Debug.LogError(
                 "[NetworkSceneTransition] NetworkManager não encontrado."
             );
-
             return;
         }
 
-        if (networkManager.SceneManager == null)
+        playerSpawner = FindAnyObjectByType<NetworkPlayerSpawner>();
+
+        if (playerSpawner == null)
         {
             Debug.LogError(
-                "[NetworkSceneTransition] SceneManager do NGO indisponível."
+                "[NetworkSceneTransition] NetworkPlayerSpawner não encontrado."
             );
-
-            return;
         }
 
-        networkManager.SceneManager.OnSceneEvent += OnSceneEvent;
+        // Aguarda a inicialização da rede.
+        networkManager.OnServerStarted += RegisterSceneEvents;
+        networkManager.OnClientStarted += RegisterSceneEvents;
+
+        // Caso a rede já esteja iniciada quando este componente executar Start.
+        if (networkManager.IsListening)
+        {
+            RegisterSceneEvents();
+        }
 
         Debug.Log(
-            "[NetworkSceneTransition] Inscrito em OnSceneEvent. " +
-            $"NetworkManager ativo: {networkManager.IsListening}"
-        );
-
-        Debug.Log(
-            "[NetworkSceneTransition] Eventos de cena registrados."
+            "[NetworkSceneTransition] Aguardando inicialização da rede."
         );
     }
 
     private void OnDestroy()
     {
-        if (networkManager != null &&
-            networkManager.SceneManager != null)
+        if (networkManager != null)
         {
-            networkManager.SceneManager.OnSceneEvent -= OnSceneEvent;
+            networkManager.OnServerStarted -= RegisterSceneEvents;
+            networkManager.OnClientStarted -= RegisterSceneEvents;
+
+            if (sceneEventsRegistered &&
+                networkManager.SceneManager != null)
+            {
+                networkManager.SceneManager.OnSceneEvent -= OnSceneEvent;
+            }
         }
 
         if (Instance == this)
@@ -159,6 +170,22 @@ public class NetworkSceneTransition : MonoBehaviour
             $"SceneManager: {networkManager.SceneManager != null}"
         );
 
+        if (playerSpawner == null)
+        {
+            playerSpawner = FindAnyObjectByType<NetworkPlayerSpawner>();
+        }
+
+        if (playerSpawner == null)
+        {
+            Debug.LogError(
+                "[NetworkSceneTransition] Não foi possível encontrar o Spawner."
+            );
+
+            return false;
+        }
+
+        playerSpawner.LockAllPlayers(true);
+
         SceneEventProgressStatus status =
             networkManager.SceneManager.LoadScene(
                 gameSceneName,
@@ -172,6 +199,8 @@ public class NetworkSceneTransition : MonoBehaviour
         if (status != SceneEventProgressStatus.Started)
         {
             transitionStarted = false;
+
+            playerSpawner.LockAllPlayers(false);
 
             loadingScreen.Hide();
 
@@ -189,7 +218,32 @@ public class NetworkSceneTransition : MonoBehaviour
     // ---------------------------------------------------------
     // NETWORK SCENE EVENTS
     // ---------------------------------------------------------
+    private void RegisterSceneEvents()
+    {
+        if (networkManager == null)
+            return;
 
+        if (sceneEventsRegistered)
+            return;
+
+        if (networkManager.SceneManager == null)
+        {
+            Debug.LogError(
+                "[NetworkSceneTransition] SceneManager do NGO indisponível."
+            );
+            return;
+        }
+
+        networkManager.SceneManager.OnSceneEvent += OnSceneEvent;
+
+        sceneEventsRegistered = true;
+
+        Debug.Log(
+            "[NetworkSceneTransition] Eventos de cena registrados com sucesso. " +
+            $"IsServer: {networkManager.IsServer} | " +
+            $"LocalClientId: {networkManager.LocalClientId}"
+        );
+    }
     private void OnSceneEvent(SceneEvent sceneEvent)
     {
         Debug.Log(
@@ -304,6 +358,35 @@ public class NetworkSceneTransition : MonoBehaviour
         Debug.Log(
             "[NetworkSceneTransition] Todos os clientes terminaram de carregar."
         );
+
+        if (networkManager.IsServer)
+        {
+            if (playerSpawner == null)
+            {
+                playerSpawner =
+                    FindAnyObjectByType<NetworkPlayerSpawner>();
+            }
+
+            if (playerSpawner == null)
+            {
+                Debug.LogError(
+                    "[NetworkSceneTransition] NetworkPlayerSpawner não encontrado."
+                );
+
+                return;
+            }
+
+            bool repositioned = playerSpawner.RepositionAllPlayers();
+
+            if (!repositioned)
+            {
+                Debug.LogError(
+                    "[NetworkSceneTransition] Falha ao reposicionar os jogadores."
+                );
+
+                return;
+            }
+        }
 
         loadingScreen.SetProgress(1f);
         loadingScreen.SetStatus("Partida pronta!");

@@ -14,9 +14,20 @@ public class PlayerMovement : MonoBehaviour
     private CharacterController controller;
     private float verticalVelocity;
 
+    private bool movementEnabled = true;
+
     private void Awake()
     {
         controller = GetComponent<CharacterController>();
+    }
+    public void SetMovementEnabled(bool enabled)
+    {
+        movementEnabled = enabled;
+
+        if (!enabled)
+        {
+            verticalVelocity = 0f;
+        }
     }
 
     /// <summary>
@@ -26,6 +37,9 @@ public class PlayerMovement : MonoBehaviour
     /// </summary>
     public void MoveCharacter(Vector3 moveDirection)
     {
+        if (!movementEnabled)
+            return;
+
         if (!controller.enabled)
             return;
 

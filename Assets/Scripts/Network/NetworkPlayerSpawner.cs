@@ -333,4 +333,133 @@ public class NetworkPlayerSpawner : MonoBehaviour
             );
         }
     }
+    public void LockAllPlayers(bool locked)
+    {
+        if (networkManager == null || !networkManager.IsServer)
+            return;
+
+        foreach (var client in networkManager.ConnectedClientsList)
+        {
+            if (client.PlayerObject == null)
+                continue;
+
+            NetworkPlayerController controller =
+                client.PlayerObject.GetComponent<NetworkPlayerController>();
+
+            if (controller == null)
+            {
+                Debug.LogWarning(
+                    $"[NetworkPlayerSpawner] NetworkPlayerController " +
+                    $"não encontrado para ClientId {client.ClientId}."
+                );
+
+                continue;
+            }
+
+            controller.SetMovementLocked(locked);
+        }
+    }
+    public bool RepositionAllPlayers()
+    {
+        if (networkManager == null || !networkManager.IsServer)
+        {
+            Debug.LogError(
+                "[NetworkPlayerSpawner] Reposicionamento permitido apenas no servidor."
+            );
+
+            return false;
+        }
+
+        SpawnRegion region = GetActiveSpawnRegion();
+
+        if (region == null)
+        {
+            Debug.LogError(
+                "[NetworkPlayerSpawner] Nenhuma SpawnRegion encontrada."
+            );
+
+            return false;
+        }
+
+        region.RefreshSpawnPoints();
+
+        if (!region.HasExpectedSpawnPointCount)
+        {
+            Debug.LogError(
+                $"[NetworkPlayerSpawner] Quantidade inválida de SpawnPoints " +
+                $"na região {region.name}."
+            );
+
+            return false;
+        }
+
+        foreach (var client in networkManager.ConnectedClientsList)
+        {
+            if (client.PlayerObject == null)
+            {
+                Debug.LogError(
+                    $"[NetworkPlayerSpawner] PlayerObject ausente para " +
+                    $"ClientId {client.ClientId}."
+                );
+
+                return false;
+            }
+
+            if (!assignedSpawnIndices.TryGetValue(
+                client.ClientId,
+                out int spawnIndex))
+            {
+                spawnIndex = FindFreeSpawnIndex(region.SpawnPointCount);
+
+                if (spawnIndex < 0)
+                {
+                    Debug.LogError(
+                        $"[NetworkPlayerSpawner] Não há SpawnPoint disponível " +
+                        $"para ClientId {client.ClientId}."
+                    );
+
+                    return false;
+                }
+
+                assignedSpawnIndices.Add(client.ClientId, spawnIndex);
+            }
+
+            Transform spawnPoint = region.GetSpawnPoint(spawnIndex);
+
+            if (spawnPoint == null)
+                return false;
+
+            CharacterController characterController =
+                client.PlayerObject.GetComponent<CharacterController>();
+
+            if (characterController != null)
+                characterController.enabled = false;
+
+            client.PlayerObject.transform.SetPositionAndRotation(
+                spawnPoint.position,
+                spawnPoint.rotation
+            );
+
+            if (characterController != null)
+                characterController.enabled = true;
+
+            NetworkPlayerController playerController =
+                client.PlayerObject.GetComponent<NetworkPlayerController>();
+
+            Debug.Log(
+                $"[NetworkPlayerSpawner] Jogador reposicionado. " +
+                $"ClientId: {client.ClientId} | " +
+                $"SpawnIndex: {spawnIndex} | " +
+                $"Position: {spawnPoint.position}"
+            );
+        }
+        
+        LockAllPlayers(false);
+        
+        Debug.Log(
+            "[NetworkPlayerSpawner] Todos os jogadores foram reposicionados."
+        );
+
+        return true;
+    }
 }
