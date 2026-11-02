@@ -113,11 +113,16 @@ public class LobbyUI : MonoBehaviour
     private void OnDisable()
     {
         CancelCountdown();
+
+        UnregisterUIEvents();
+
         panelRenderer.UnregisterUIReloadCallback(
             OnUIReload
         );
 
         UnsubscribeFromNetwork();
+
+        ClearUIReferences();
     }
 
     // ---------------------------------------------------------
@@ -286,6 +291,31 @@ public class LobbyUI : MonoBehaviour
         return new LobbyPlayerSlotUI(
             slot
         );
+    }
+    private void ClearUIReferences()
+    {
+        root = null;
+
+        mainMenuPanel = null;
+        playerNameInput = null;
+        joinCodeInput = null;
+        createButton = null;
+        joinButton = null;
+        mainStatus = null;
+
+        lobbyPanel = null;
+        sessionName = null;
+        joinCode = null;
+        playerCount = null;
+        lobbyStatus = null;
+
+        leaveButton = null;
+        readyButton = null;
+        copyCodeButton = null;
+
+        playerSlots = null;
+
+        uiVersion = -1;
     }
 
     // ---------------------------------------------------------
@@ -494,6 +524,8 @@ public class LobbyUI : MonoBehaviour
         string code =
             joinCodeInput?.value;
 
+        int requestUIVersion = uiVersion;
+
         bool success =
             await sessionManager
                 .JoinSessionAsync(
@@ -501,18 +533,25 @@ public class LobbyUI : MonoBehaviour
                     playerName
                 );
 
-        operationInProgress =
-            false;
+        // A cena pode ter sido descarregada durante o await.
+        if (this == null)
+        {
+            return;
+        }
 
-        SetMainButtonsEnabled(
-            true
-        );
+        operationInProgress = false;
+
+        if (!IsUIAvailable(requestUIVersion))
+        {
+            return;
+        }
+
+        SetMainButtonsEnabled(true);
 
         if (!success)
         {
             SetMainStatus(
-                sessionManager
-                    .LastErrorMessage
+                sessionManager.LastErrorMessage
             );
 
             return;
@@ -893,21 +932,23 @@ public class LobbyUI : MonoBehaviour
         }
     }
 
-    private void SetMainButtonsEnabled(
-        bool enabled)
+    private void SetMainButtonsEnabled(bool enabled)
     {
+        if (!isActiveAndEnabled ||
+            root == null ||
+            root.panel == null)
+        {
+            return;
+        }
+
         if (createButton != null)
         {
-            createButton.SetEnabled(
-                enabled
-            );
+            createButton.SetEnabled(enabled);
         }
 
         if (joinButton != null)
         {
-            joinButton.SetEnabled(
-                enabled
-            );
+            joinButton.SetEnabled(enabled);
         }
     }
 
@@ -987,6 +1028,19 @@ public class LobbyUI : MonoBehaviour
                 "LeaveButton não encontrado."
             );
         }
+    }
+    private bool IsUIAvailable(int expectedVersion)
+    {
+        // Verifica primeiro se o próprio MonoBehaviour existe.
+        if (this == null)
+        {
+            return false;
+        }
+
+        return isActiveAndEnabled &&
+               uiVersion == expectedVersion &&
+               root != null &&
+               root.panel != null;
     }
     // ---------------------------------------------------------
     // Countdown
@@ -1100,7 +1154,7 @@ public class LobbyUI : MonoBehaviour
         countdownRunning = false;
     }
     // ---------------------------------------------------------
-    // Copiar Código da Sala
+    // Copy Join Code
     // ---------------------------------------------------------
     private void OnCopyCodeClicked()
     {
