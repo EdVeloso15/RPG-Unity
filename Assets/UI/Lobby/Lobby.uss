@@ -117,3 +117,42 @@ VisualElement {}
     border-color: #FFFFFF; /* Muda a borda para branco para destacar quem está selecionado */
     background-color: rgba(211, 47, 47, 0.2);
 }
+
+/* 1. Fundo da Tela (Ilustração Pixel Art) */
+.loading-screen-bg {
+    flex-grow: 1;
+    background-image: url('project://database/Assets/Sprites/UI/loading_screen_art.png');
+    justify-content: flex-end; /* Joga os elementos filhos para a área escura inferior */
+    align-items: center; /* Centraliza a barra horizontalmente */
+    padding-bottom: 80px; /* Distância do rodapé reservada para as dicas de loading */
+}
+
+/* 2. Moldura de Madeira/Ferro (Estrutura externa) */
+.loading-bar-bg {
+    width: 800px; /* Largura estática da moldura */
+    height: 64px; /* Altura total da moldura */
+    justify-content: center; /* Centraliza a canaleta mágica no meio da estrutura */
+    padding-left: 12px; /* Margens internas para o fill não vazar sobre a moldura */
+    padding-right: 12px;
+}
+
+.loading-bar-fill {
+    width: 0%;
+    height: 48px; /* Ajuste para a altura exata da parte interna da sua moldura (image_1.png) */
+    background-image: url('project://database/Assets/Sprites/UI/loading_bar_fill.png');
+
+    /* 1. Use margin ou padding para alinhar fisicamente o preenchimento dentro da canaleta vazia da moldura */
+    margin-left: 12px;
+    margin-right: 12px;
+
+    /* 2. Propriedade obrigatória para habilitar a repetição geométrica da área central no 9-slice */
+    -unity-background-scale-mode: stretch-to-fill;
+
+    /* 3. Ajuste os cortes. A imagem_4ca348.png mostra bordas chanfradas ocupando as extremidades */
+    -unity-slice-left: 20; /* Preserve o corte exato das pontas fixas */
+    -unity-slice-right: 20;
+
+    transition-property: width;
+    transition-duration: 0.15s;
+    transition-timing-function: ease-out;
+}

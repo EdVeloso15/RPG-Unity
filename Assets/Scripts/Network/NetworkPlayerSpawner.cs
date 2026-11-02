@@ -1,30 +1,84 @@
+
+using System.Collections.Generic;
+using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class NetworkPlayerSpawner : MonoBehaviour
 {
-    [Header("Spawn Points")]
-    [SerializeField]
-    private Transform[] spawnPoints;
+    private static NetworkPlayerSpawner Instance;
+
+    private NetworkManager networkManager;
+
+    // ClientId -> índice do SpawnPoint reservado.
+    private readonly Dictionary<ulong, int> assignedSpawnIndices =
+        new Dictionary<ulong, int>();
+
+    // ---------------------------------------------------------
+    // INITIALIZATION
+    // ---------------------------------------------------------
+
+    private void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        Instance = this;
+
+        DontDestroyOnLoad(gameObject);
+    }
 
     private void Start()
     {
-        if (NetworkManager.Singleton == null)
+        networkManager = NetworkManager.Singleton;
+
+        if (networkManager == null)
         {
             Debug.LogError(
-                "[NetworkPlayerSpawner] NetworkManager não encontrado no Start."
+                "[NetworkPlayerSpawner] NetworkManager não encontrado."
             );
 
             return;
         }
 
-        NetworkManager.Singleton.ConnectionApprovalCallback =
+        networkManager.ConnectionApprovalCallback =
             ApprovalCheck;
 
+        networkManager.OnClientConnectedCallback +=
+            OnClientConnected;
+
+        networkManager.OnClientDisconnectCallback +=
+            OnClientDisconnected;
+
         Debug.Log(
-            "[NetworkPlayerSpawner] ConnectionApprovalCallback configurado."
+            "[NetworkPlayerSpawner] Sistema de Spawn inicializado."
         );
     }
+
+    private void OnDestroy()
+    {
+        if (Instance != this)
+            return;
+
+        if (networkManager != null)
+        {
+            networkManager.OnClientConnectedCallback -=
+                OnClientConnected;
+
+            networkManager.OnClientDisconnectCallback -=
+                OnClientDisconnected;
+        }
+
+        Instance = null;
+    }
+
+    // ---------------------------------------------------------
+    // CONNECTION APPROVAL
+    // ---------------------------------------------------------
 
     private void ApprovalCheck(
         NetworkManager.ConnectionApprovalRequest request,
@@ -32,45 +86,251 @@ public class NetworkPlayerSpawner : MonoBehaviour
     {
         ulong clientId = request.ClientNetworkId;
 
-        response.Approved = true;
-        response.CreatePlayerObject = true;
+        response.Approved = false;
+        response.CreatePlayerObject = false;
+
+        response.Position = Vector3.zero;
+        response.Rotation = Quaternion.identity;
 
         response.PlayerPrefabHash = null;
 
-        int spawnIndex = GetSpawnIndex(clientId);
+        SpawnRegion region = GetActiveSpawnRegion();
 
-        if (spawnIndex >= 0)
+        if (region == null)
         {
-            response.Position = spawnPoints[spawnIndex].position;
-            response.Rotation = spawnPoints[spawnIndex].rotation;
-        }
-        else
-        {
-            response.Position = Vector3.zero;
-            response.Rotation = Quaternion.identity;
-
-            Debug.LogWarning(
-                $"[NetworkPlayerSpawner] Não existe Spawn Point " +
-                $"disponível para ClientId {clientId}."
+            RejectConnection(
+                response,
+                clientId,
+                "Nenhuma região de Spawn disponível."
             );
+
+            return;
         }
+
+        region.RefreshSpawnPoints();
+
+        if (!region.HasExpectedSpawnPointCount)
+        {
+            RejectConnection(
+                response,
+                clientId,
+                $"Região '{region.name}' possui quantidade inválida de SpawnPoints."
+            );
+
+            return;
+        }
+
+        int spawnIndex = GetOrAssignSpawnIndex(
+            clientId,
+            region.SpawnPointCount
+        );
+
+        if (spawnIndex < 0)
+        {
+            RejectConnection(
+                response,
+                clientId,
+                "Não existem posições de Spawn disponíveis."
+            );
+
+            return;
+        }
+
+        Transform spawnPoint =
+            region.GetSpawnPoint(spawnIndex);
+
+        if (spawnPoint == null)
+        {
+            assignedSpawnIndices.Remove(clientId);
+
+            RejectConnection(
+                response,
+                clientId,
+                "O SpawnPoint selecionado não foi encontrado."
+            );
+
+            return;
+        }
+
+        response.Approved = true;
+        response.CreatePlayerObject = true;
+
+        response.Position = spawnPoint.position;
+        response.Rotation = spawnPoint.rotation;
 
         Debug.Log(
-            $"[NetworkPlayerSpawner] ClientId {clientId} aprovado. " +
+            $"[NetworkPlayerSpawner] Jogador aprovado. " +
+            $"ClientId: {clientId} | " +
+            $"Região: {region.name} | " +
             $"SpawnIndex: {spawnIndex}"
         );
     }
 
-    private int GetSpawnIndex(ulong clientId)
+    private void RejectConnection(
+        NetworkManager.ConnectionApprovalResponse response,
+        ulong clientId,
+        string reason)
     {
-        if (spawnPoints == null || spawnPoints.Length == 0)
+        response.Approved = false;
+        response.CreatePlayerObject = false;
+        response.Reason = reason;
+
+        Debug.LogWarning(
+            $"[NetworkPlayerSpawner] Conexão recusada. " +
+            $"ClientId: {clientId} | Motivo: {reason}"
+        );
+    }
+
+    // ---------------------------------------------------------
+    // SPAWN REGION DISCOVERY
+    // ---------------------------------------------------------
+
+    private SpawnRegion GetActiveSpawnRegion()
+    {
+        Scene activeScene = SceneManager.GetActiveScene();
+
+        SpawnRegion selectedRegion = null;
+
+        GameObject[] sceneRoots =
+            activeScene.GetRootGameObjects();
+
+        foreach (GameObject root in sceneRoots)
+        {
+            SpawnRegion[] regions =
+                root.GetComponentsInChildren<SpawnRegion>(true);
+
+            foreach (SpawnRegion region in regions)
+            {
+                if (!region.IsEnabledForSpawning)
+                    continue;
+
+                if (selectedRegion != null)
+                {
+                    Debug.LogWarning(
+                        "[NetworkPlayerSpawner] Mais de uma região " +
+                        "está habilitada. Será utilizada a primeira encontrada."
+                    );
+
+                    continue;
+                }
+
+                selectedRegion = region;
+            }
+        }
+
+        return selectedRegion;
+    }
+
+    // ---------------------------------------------------------
+    // SPAWN ASSIGNMENT
+    // ---------------------------------------------------------
+
+    private int GetOrAssignSpawnIndex(
+        ulong clientId,
+        int spawnPointCount)
+    {
+        // Mantém a posição já reservada para o jogador.
+        if (assignedSpawnIndices.TryGetValue(
+                clientId,
+                out int assignedIndex))
+        {
+            if (assignedIndex < spawnPointCount)
+                return assignedIndex;
+
+            assignedSpawnIndices.Remove(clientId);
+        }
+
+        // Reserva uma posição para o Host, caso ainda não tenha
+        // sido registrado pelo evento OnClientConnectedCallback.
+        if (networkManager.IsHost &&
+            clientId != NetworkManager.ServerClientId &&
+            networkManager.ConnectedClientsIds.Contains(
+                NetworkManager.ServerClientId
+            ) &&
+            !assignedSpawnIndices.ContainsKey(
+                NetworkManager.ServerClientId
+            ))
+        {
+            int hostIndex = FindFreeSpawnIndex(spawnPointCount);
+
+            if (hostIndex >= 0)
+            {
+                assignedSpawnIndices.Add(
+                    NetworkManager.ServerClientId,
+                    hostIndex
+                );
+            }
+        }
+
+        int freeIndex = FindFreeSpawnIndex(spawnPointCount);
+
+        if (freeIndex < 0)
             return -1;
 
-        int index = (int)clientId;
+        assignedSpawnIndices.Add(
+            clientId,
+            freeIndex
+        );
 
-        if (index >= spawnPoints.Length)
-            return -1;
+        return freeIndex;
+    }
 
-        return index;
+    private int FindFreeSpawnIndex(int spawnPointCount)
+    {
+        for (int i = 0; i < spawnPointCount; i++)
+        {
+            if (!assignedSpawnIndices.ContainsValue(i))
+                return i;
+        }
+
+        return -1;
+    }
+
+    // ---------------------------------------------------------
+    // NETWORK EVENTS
+    // ---------------------------------------------------------
+
+    private void OnClientConnected(ulong clientId)
+    {
+        if (networkManager == null || !networkManager.IsServer)
+            return;
+
+        if (assignedSpawnIndices.ContainsKey(clientId))
+            return;
+
+        SpawnRegion region = GetActiveSpawnRegion();
+
+        if (region == null)
+            return;
+
+        region.RefreshSpawnPoints();
+
+        int spawnIndex = FindFreeSpawnIndex(
+            region.SpawnPointCount
+        );
+
+        if (spawnIndex < 0)
+            return;
+
+        assignedSpawnIndices.Add(
+            clientId,
+            spawnIndex
+        );
+
+        Debug.Log(
+            $"[NetworkPlayerSpawner] Posição registrada. " +
+            $"ClientId: {clientId} | SpawnIndex: {spawnIndex}"
+        );
+    }
+
+    private void OnClientDisconnected(ulong clientId)
+    {
+        if (assignedSpawnIndices.Remove(clientId))
+        {
+            Debug.Log(
+                $"[NetworkPlayerSpawner] Posição liberada. " +
+                $"ClientId: {clientId}"
+            );
+        }
     }
 }

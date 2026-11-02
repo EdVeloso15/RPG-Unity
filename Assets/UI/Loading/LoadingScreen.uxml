@@ -1,0 +1,15 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/Loading/LoadingScreen.uss?fileID=7433441132597879392&amp;guid=9cd988f6702b672418fc9090939632dc&amp;type=3#LoadingScreen"/>
+    <ui:VisualElement name="LoadingRoot" class="loading-root" style="flex-grow: 1; display: flex;">
+        <ui:Image name="LoadingBackground" source="" scale-mode="ScaleToFit" class="loading-background" style="background-image: url(&quot;project://database/Assets/Images/UI/LoadingScreen.jpg?fileID=2800000&amp;guid=73f141eb05d128543838b83da9d33038&amp;type=3#LoadingScreen&quot;); -unity-background-scale-mode: stretch-to-fill;"/>
+        <ui:VisualElement name="LoadingContent" class="loading-content" style="flex-grow: 1;">
+            <ui:VisualElement name="LoadingBarContainer" class="loading-bar-container" style="flex-grow: 1;">
+                <ui:VisualElement name="LoadingBar" class="loading-bar-frame" style="flex-grow: 1; background-image: url(&quot;project://database/Assets/Images/UI/LoadingBar.png?fileID=2800000&amp;guid=4ca82bd17b707d94aa6eb07231e16add&amp;type=3#LoadingBar&quot;);"/>
+                <ui:VisualElement name="LoadingBarFillContainer" style="flex-grow: 1; width: 81.75%;">
+                    <ui:VisualElement name="LoadingBarFill" style="flex-grow: 1; background-image: url(&quot;project://database/Assets/Images/UI/LoadingBarFill.png?fileID=554428776&amp;guid=2118b30dc6a69234bbf2d4cec9622a11&amp;type=3#LoadingBarFill_0&quot;); -unity-slice-left: 32; -unity-slice-right: 32; margin-top: 5.25%; margin-bottom: 4.5%; margin-right: 11%; margin-left: 11%; width: 100%;"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:Label text="Label" name="LoadingStatus" class="loading-status"/>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

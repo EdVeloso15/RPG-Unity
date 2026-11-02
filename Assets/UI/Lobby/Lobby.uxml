@@ -13,7 +13,7 @@
             </ui:VisualElement>
             <ui:Label text="..." name="MainStatus" class="status-text" style="width: 100%; height: 45px; margin-top: 20px; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; -unity-text-align: middle-center;"/>
         </ui:VisualElement>
-        <ui:VisualElement name="LobbyPanel" class="screen" style="flex-grow: 1; width: 720px; height: 760px; padding-top: 30px; padding-right: 36px; padding-bottom: 30px; padding-left: 36px; align-items: center; color: rgb(245, 245, 247); flex-basis: initial; display: flex; background-color: rgb(40, 40, 43);">
+        <ui:VisualElement name="LobbyPanel" class="screen" style="flex-grow: 1; width: 720px; height: 760px; padding-top: 30px; padding-right: 36px; padding-bottom: 30px; padding-left: 36px; align-items: center; color: rgb(245, 245, 247); flex-basis: initial; display: none; background-color: rgb(40, 40, 43); visibility: visible;">
             <ui:VisualElement name="LobbyHeader" class="lobby-header" style="flex-grow: 1; width: 100%; height: 55px; flex-direction: row; justify-content: space-between; align-items: center; align-self: auto; flex-basis: initial;">
                 <ui:Label text="LOBBY" name="LobbyTitle" style="width: 70%; height: 50px; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; font-size: 32px; -unity-text-align: middle-left;"/>
                 <ui:Label text="0/4" name="PlayerCount" style="font-size: 32px; width: 30%; height: 50px; -unity-text-align: middle-center;"/>
@@ -22,7 +22,7 @@
                 <ui:Label text="Online Game" name="SessionName" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; width: 50%; height: 40px; -unity-text-align: middle-left;"/>
                 <ui:VisualElement name="JoinCodeContainer" style="flex-grow: 1; align-items: center; align-content: auto; justify-content: space-around; flex-direction: row; align-self: center;">
                     <ui:Label text="Código: ABC123" name="JoinCode" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; width: 50%; height: 40px; -unity-text-align: middle-center;"/>
-                    <ui:Button text="" name="CopyJoinCodeButton" focusable="true" icon-image="" style="background-image: url(&quot;project://database/Assets/Images/Copy.svg?fileID=7388822144124034973&amp;guid=5e078f522d0ca634498f8f04bc1a9598&amp;type=3#Copy&quot;); background-color: rgba(188, 188, 188, 0); padding-top: 0; padding-bottom: 0; margin-top: 0; margin-bottom: 0; min-width: 32px; min-height: 32px; max-width: 64px; max-height: 64px; color: rgba(245, 245, 247, 0); visibility: visible; border-left-color: rgba(149, 149, 149, 0); border-right-color: rgba(149, 149, 149, 0); border-top-color: rgba(149, 149, 149, 0); border-bottom-color: rgba(149, 149, 149, 0); margin-right: 0; margin-left: 0; padding-right: 0; padding-left: 0; aspect-ratio: 1;"/>
+                    <ui:Button text="" name="CopyJoinCodeButton" focusable="true" icon-image="" style="background-image: url(&quot;project://database/Assets/Images/UI/Copy.svg?fileID=7388822144124034973&amp;guid=5e078f522d0ca634498f8f04bc1a9598&amp;type=3#Copy&quot;); background-color: rgba(188, 188, 188, 0); padding-top: 0; padding-bottom: 0; margin-top: 0; margin-bottom: 0; min-width: 32px; min-height: 32px; max-width: 64px; max-height: 64px; color: rgba(245, 245, 247, 0); visibility: visible; border-left-color: rgba(149, 149, 149, 0); border-right-color: rgba(149, 149, 149, 0); border-top-color: rgba(149, 149, 149, 0); border-bottom-color: rgba(149, 149, 149, 0); margin-right: 0; margin-left: 0; padding-right: 0; padding-left: 0; aspect-ratio: 1;"/>
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement name="PlayersContainer" class="players-container" style="flex-grow: 1; width: 100%; height: 360px; flex-basis: initial;">
@@ -33,8 +33,8 @@
                         <ui:Label text="JOGADOR" name="PlayerRole" class="player-role" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; font-size: 13px; width: 100%; height: 20px;"/>
                     </ui:VisualElement>
                     <ui:VisualElement name="ReadyIndicator" style="flex-grow: 1; width: auto; height: 60px;">
-                        <ui:Image name="ReadyActive" style="height: 60px; width: 60px; align-self: flex-end; overflow: visible; position: absolute; background-image: url(&quot;project://database/Assets/Images/Ready.png?fileID=2800000&amp;guid=6986b608c61c4ed48b82ed3003dda17a&amp;type=3#Ready&quot;); display: none;"/>
-                        <ui:Image name="ReadyInactive" style="height: 60px; width: 60px; align-self: flex-end; overflow: visible; position: absolute; background-image: url(&quot;project://database/Assets/Images/Not_Ready.png?fileID=2800000&amp;guid=cc00e38a1e841234eba4d5fd536d8357&amp;type=3#Not_Ready&quot;);"/>
+                        <ui:Image name="ReadyActive" style="height: 60px; width: 60px; align-self: flex-end; overflow: visible; position: absolute; background-image: url(&quot;project://database/Assets/Images/UI/Ready.png?fileID=2800000&amp;guid=6986b608c61c4ed48b82ed3003dda17a&amp;type=3#Ready&quot;); display: none;"/>
+                        <ui:Image name="ReadyInactive" style="height: 60px; width: 60px; align-self: flex-end; overflow: visible; position: absolute; background-image: url(&quot;project://database/Assets/Images/UI/NotReady.png?fileID=2800000&amp;guid=cc00e38a1e841234eba4d5fd536d8357&amp;type=3#NotReady&quot;);"/>
                     </ui:VisualElement>
                 </ui:VisualElement>
                 <ui:VisualElement name="PlayerSlot_2" class="player-slot" style="flex-grow: 0; width: 100%; height: 76px; margin-bottom: 8px; flex-direction: row; align-items: center; flex-basis: initial;">
@@ -44,8 +44,8 @@
                         <ui:Label text="JOGADOR" name="PlayerRole" class="player-role" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; font-size: 13px; width: 100%; height: 20px;"/>
                     </ui:VisualElement>
                     <ui:VisualElement name="ReadyIndicator" style="flex-grow: 1; width: auto; height: 60px;">
-                        <ui:Image name="ReadyActive" style="height: 60px; width: 60px; align-self: flex-end; overflow: visible; position: absolute; background-image: url(&quot;project://database/Assets/Images/Ready.png?fileID=2800000&amp;guid=6986b608c61c4ed48b82ed3003dda17a&amp;type=3#Ready&quot;); display: none;"/>
-                        <ui:Image name="ReadyInactive" style="height: 60px; width: 60px; align-self: flex-end; overflow: visible; position: absolute; background-image: url(&quot;project://database/Assets/Images/Not_Ready.png?fileID=2800000&amp;guid=cc00e38a1e841234eba4d5fd536d8357&amp;type=3#Not_Ready&quot;);"/>
+                        <ui:Image name="ReadyActive" style="height: 60px; width: 60px; align-self: flex-end; overflow: visible; position: absolute; background-image: url(&quot;project://database/Assets/Images/UI/Ready.png?fileID=2800000&amp;guid=6986b608c61c4ed48b82ed3003dda17a&amp;type=3#Ready&quot;); display: none;"/>
+                        <ui:Image name="ReadyInactive" style="height: 60px; width: 60px; align-self: flex-end; overflow: visible; position: absolute; background-image: url(&quot;project://database/Assets/Images/UI/NotReady.png?fileID=2800000&amp;guid=cc00e38a1e841234eba4d5fd536d8357&amp;type=3#NotReady&quot;);"/>
                     </ui:VisualElement>
                 </ui:VisualElement>
                 <ui:VisualElement name="PlayerSlot_3" class="player-slot" style="flex-grow: 0; width: 100%; height: 76px; margin-bottom: 8px; flex-direction: row; align-items: center; flex-basis: initial;">
@@ -55,8 +55,8 @@
                         <ui:Label text="JOGADOR" name="PlayerRole" class="player-role" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; font-size: 13px; width: 100%; height: 20px;"/>
                     </ui:VisualElement>
                     <ui:VisualElement name="ReadyIndicator" style="flex-grow: 1; width: auto; height: 60px;">
-                        <ui:Image name="ReadyActive" style="height: 60px; width: 60px; align-self: flex-end; overflow: visible; position: absolute; background-image: url(&quot;project://database/Assets/Images/Ready.png?fileID=2800000&amp;guid=6986b608c61c4ed48b82ed3003dda17a&amp;type=3#Ready&quot;); display: none;"/>
-                        <ui:Image name="ReadyInactive" style="height: 60px; width: 60px; align-self: flex-end; overflow: visible; position: absolute; background-image: url(&quot;project://database/Assets/Images/Not_Ready.png?fileID=2800000&amp;guid=cc00e38a1e841234eba4d5fd536d8357&amp;type=3#Not_Ready&quot;);"/>
+                        <ui:Image name="ReadyActive" style="height: 60px; width: 60px; align-self: flex-end; overflow: visible; position: absolute; background-image: url(&quot;project://database/Assets/Images/UI/Ready.png?fileID=2800000&amp;guid=6986b608c61c4ed48b82ed3003dda17a&amp;type=3#Ready&quot;); display: none;"/>
+                        <ui:Image name="ReadyInactive" style="height: 60px; width: 60px; align-self: flex-end; overflow: visible; position: absolute; background-image: url(&quot;project://database/Assets/Images/UI/NotReady.png?fileID=2800000&amp;guid=cc00e38a1e841234eba4d5fd536d8357&amp;type=3#NotReady&quot;);"/>
                     </ui:VisualElement>
                 </ui:VisualElement>
                 <ui:VisualElement name="PlayerSlot_4" class="player-slot" style="flex-grow: 0; width: 100%; height: 76px; margin-bottom: 8px; flex-direction: row; align-items: center; flex-basis: initial;">
@@ -66,8 +66,8 @@
                         <ui:Label text="JOGADOR" name="PlayerRole" class="player-role" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; font-size: 13px; width: 100%; height: 20px;"/>
                     </ui:VisualElement>
                     <ui:VisualElement name="ReadyIndicator" style="flex-grow: 1; width: auto; height: 60px;">
-                        <ui:Image name="ReadyActive" style="height: 60px; width: 60px; align-self: flex-end; overflow: visible; position: absolute; background-image: url(&quot;project://database/Assets/Images/Ready.png?fileID=2800000&amp;guid=6986b608c61c4ed48b82ed3003dda17a&amp;type=3#Ready&quot;); display: none;"/>
-                        <ui:Image name="ReadyInactive" style="height: 60px; width: 60px; align-self: flex-end; overflow: visible; position: absolute; background-image: url(&quot;project://database/Assets/Images/Not_Ready.png?fileID=2800000&amp;guid=cc00e38a1e841234eba4d5fd536d8357&amp;type=3#Not_Ready&quot;);"/>
+                        <ui:Image name="ReadyActive" style="height: 60px; width: 60px; align-self: flex-end; overflow: visible; position: absolute; background-image: url(&quot;project://database/Assets/Images/UI/Ready.png?fileID=2800000&amp;guid=6986b608c61c4ed48b82ed3003dda17a&amp;type=3#Ready&quot;); display: none;"/>
+                        <ui:Image name="ReadyInactive" style="height: 60px; width: 60px; align-self: flex-end; overflow: visible; position: absolute; background-image: url(&quot;project://database/Assets/Images/UI/NotReady.png?fileID=2800000&amp;guid=cc00e38a1e841234eba4d5fd536d8357&amp;type=3#NotReady&quot;);"/>
                     </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>
