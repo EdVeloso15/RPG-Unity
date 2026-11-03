@@ -11,6 +11,17 @@ public class NetworkSessionManager : MonoBehaviour
 {
     public static NetworkSessionManager Instance { get; private set; }
 
+    private enum SessionOperationState
+    {
+        Idle,
+        Creating,
+        Joining,
+        Leaving
+    }
+
+    private SessionOperationState sessionOperationState =
+        SessionOperationState.Idle;
+
     [Header("Session Settings")]
     [SerializeField, Min(1)]
     private int maxPlayers = 4;
@@ -72,7 +83,6 @@ public class NetworkSessionManager : MonoBehaviour
     // ---------------------------------------------------------
     // CREATE
     // ---------------------------------------------------------
-
     public Task<bool> CreateSessionAsync()
     {
         string playerName = "Player";
@@ -87,8 +97,32 @@ public class NetworkSessionManager : MonoBehaviour
 
         return CreateSessionAsync(playerName);
     }
-
     public async Task<bool> CreateSessionAsync(
+        string playerName)
+    {
+        if (!TryBeginSessionOperation(
+                SessionOperationState.Creating))
+        {
+            return false;
+        }
+
+        try
+        {
+            return await CreateSessionOperationAsync(
+                playerName
+            );
+        }
+        finally
+        {
+            EndSessionOperation(
+                SessionOperationState.Creating
+            );
+            Debug.Log(
+                $"[Network] Operação finalizada. Estado: {sessionOperationState}"
+            );
+        }
+    }
+    private async Task<bool> CreateSessionOperationAsync(
         string playerName)
     {
         LastErrorMessage = string.Empty;
@@ -199,8 +233,31 @@ public class NetworkSessionManager : MonoBehaviour
             playerName
         );
     }
-
     public async Task<bool> JoinSessionAsync(
+        string joinCode,
+        string playerName)
+    {
+        if (!TryBeginSessionOperation(
+                SessionOperationState.Joining))
+        {
+            return false;
+        }
+
+        try
+        {
+            return await JoinSessionOperationAsync(
+                joinCode,
+                playerName
+            );
+        }
+        finally
+        {
+            EndSessionOperation(
+                SessionOperationState.Joining
+            );
+        }
+    }
+    private async Task<bool> JoinSessionOperationAsync(
         string joinCode,
         string playerName)
     {
@@ -331,7 +388,27 @@ public class NetworkSessionManager : MonoBehaviour
     // LEAVE
     // ---------------------------------------------------------
 
-    public async Task LeaveSessionAsync()
+        public async Task LeaveSessionAsync()
+    {
+        if (!TryBeginSessionOperation(
+                SessionOperationState.Leaving))
+        {
+            return;
+        }
+
+        try
+        {
+            await LeaveSessionOperationAsync();
+        }
+        finally
+        {
+            EndSessionOperation(
+                SessionOperationState.Leaving
+            );
+        }
+    }
+
+    private async Task LeaveSessionOperationAsync()
     {
         if (CurrentSession == null)
         {
@@ -339,10 +416,7 @@ public class NetworkSessionManager : MonoBehaviour
             return;
         }
 
-        ISession session =
-            CurrentSession;
-
-        CurrentSession = null;
+        ISession session = CurrentSession;
 
         UnsubscribeFromSession(session);
 
@@ -369,6 +443,11 @@ public class NetworkSessionManager : MonoBehaviour
         }
         finally
         {
+            if (ReferenceEquals(CurrentSession, session))
+            {
+                CurrentSession = null;
+            }
+
             SessionEnded?.Invoke();
         }
     }
@@ -829,6 +908,45 @@ public class NetworkSessionManager : MonoBehaviour
             $"[NetworkDiagnostic] {context} | " +
             $"UnityTransport encontrado={transport != null}"
         );
+    }
+    private bool TryBeginSessionOperation(
+    SessionOperationState requestedState)
+    {
+        if (sessionOperationState != SessionOperationState.Idle)
+        {
+            LastErrorMessage =
+                "Já existe uma operação de sessão em andamento.";
+
+            Debug.LogWarning(
+                $"[Network] Operação recusada. " +
+                $"Estado atual: {sessionOperationState} | " +
+                $"Solicitado: {requestedState}"
+            );
+
+            return false;
+        }
+
+        sessionOperationState = requestedState;
+
+        return true;
+    }
+
+    private void EndSessionOperation(
+        SessionOperationState completedState)
+    {
+        if (sessionOperationState != completedState)
+        {
+            Debug.LogWarning(
+                $"[Network] Tentativa de finalizar uma operação " +
+                $"que não corresponde ao estado atual. " +
+                $"Atual: {sessionOperationState} | " +
+                $"Finalizada: {completedState}"
+            );
+
+            return;
+        }
+
+        sessionOperationState = SessionOperationState.Idle;
     }
 }
 
