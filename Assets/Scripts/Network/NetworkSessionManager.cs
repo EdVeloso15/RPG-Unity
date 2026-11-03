@@ -117,9 +117,6 @@ public class NetworkSessionManager : MonoBehaviour
             EndSessionOperation(
                 SessionOperationState.Creating
             );
-            Debug.Log(
-                $"[Network] Operação finalizada. Estado: {sessionOperationState}"
-            );
         }
     }
     private async Task<bool> CreateSessionOperationAsync(
@@ -388,7 +385,7 @@ public class NetworkSessionManager : MonoBehaviour
     // LEAVE
     // ---------------------------------------------------------
 
-        public async Task LeaveSessionAsync()
+    public async Task LeaveSessionAsync()
     {
         if (!TryBeginSessionOperation(
                 SessionOperationState.Leaving))
