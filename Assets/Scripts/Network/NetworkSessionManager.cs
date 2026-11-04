@@ -18,6 +18,14 @@ public class NetworkSessionManager : MonoBehaviour
         Joining,
         Leaving
     }
+    private ISession subscribedSession;
+
+    private Action<string> playerJoinedHandler;
+    private Action<string> playerHasLeftHandler;
+    private Action playerPropertiesChangedHandler;
+    private Action removedFromSessionHandler;
+
+    private ISession finalizedSession;
 
     private SessionOperationState sessionOperationState =
         SessionOperationState.Idle;
@@ -442,7 +450,7 @@ public class NetworkSessionManager : MonoBehaviour
         {
             if (ReferenceEquals(CurrentSession, session))
             {
-                CurrentSession = null;
+                FinalizeSession(session);
             }
 
             SessionEnded?.Invoke();
@@ -570,41 +578,74 @@ public class NetworkSessionManager : MonoBehaviour
     // EVENTS
     // ---------------------------------------------------------
 
-    private void SubscribeToSession(
-        ISession session)
+    private void SubscribeToSession(ISession session)
     {
-        session.PlayerJoined +=
-            OnPlayerJoined;
+        if (session == null)
+            return;
 
-        session.PlayerHasLeft +=
-            OnPlayerHasLeft;
+        // A mesma sessão já está inscrita.
+        if (ReferenceEquals(subscribedSession, session))
+            return;
 
-        session.PlayerPropertiesChanged +=
-            OnPlayerPropertiesChanged;
+        // Remove inscrições anteriores, se existirem.
+        if (subscribedSession != null)
+        {
+            UnsubscribeFromSession(subscribedSession);
+        }
 
-        session.RemovedFromSession +=
-            OnRemovedFromSession;
+        finalizedSession = null;
+
+        subscribedSession = session;
+
+        // Os delegates capturam a sessão de origem.
+        playerJoinedHandler =
+            playerId => OnPlayerJoined(session, playerId);
+
+        playerHasLeftHandler =
+            playerId => OnPlayerHasLeft(session, playerId);
+
+        playerPropertiesChangedHandler =
+            () => OnPlayerPropertiesChanged(session);
+
+        removedFromSessionHandler =
+            () => OnRemovedFromSession(session);
+
+        session.PlayerJoined += playerJoinedHandler;
+        session.PlayerHasLeft += playerHasLeftHandler;
+        session.PlayerPropertiesChanged += playerPropertiesChangedHandler;
+        session.RemovedFromSession += removedFromSessionHandler;
     }
 
-    private void UnsubscribeFromSession(
-        ISession session)
+    private void UnsubscribeFromSession(ISession session)
     {
-        session.PlayerJoined -=
-            OnPlayerJoined;
+        if (session == null)
+            return;
 
-        session.PlayerHasLeft -=
-            OnPlayerHasLeft;
+        // Só podemos remover os delegates que pertencem
+        // à sessão atualmente rastreada.
+        if (!ReferenceEquals(subscribedSession, session))
+            return;
 
-        session.PlayerPropertiesChanged -=
-            OnPlayerPropertiesChanged;
+        session.PlayerJoined -= playerJoinedHandler;
+        session.PlayerHasLeft -= playerHasLeftHandler;
+        session.PlayerPropertiesChanged -= playerPropertiesChangedHandler;
+        session.RemovedFromSession -= removedFromSessionHandler;
 
-        session.RemovedFromSession -=
-            OnRemovedFromSession;
+        subscribedSession = null;
+
+        playerJoinedHandler = null;
+        playerHasLeftHandler = null;
+        playerPropertiesChangedHandler = null;
+        removedFromSessionHandler = null;
     }
 
     private void OnPlayerJoined(
-        string playerId)
+    ISession session,
+    string playerId)
     {
+        if (!IsActiveSessionEvent(session))
+            return;
+
         Debug.Log(
             $"[Lobby] Jogador entrou: {playerId}"
         );
@@ -613,27 +654,28 @@ public class NetworkSessionManager : MonoBehaviour
     }
 
     private void OnPlayerHasLeft(
-        string playerId)
+    ISession session,
+    string playerId)
     {
+        if (!IsActiveSessionEvent(session))
+            return;
+
         Debug.Log(
             $"[Lobby] Jogador saiu: {playerId}"
         );
-        // Avisa as interfaces locais para cancelar
-        // o Countdown e remover o estado Ready.
+
+        // Preserva o comportamento atual:
+        // cancelar Countdown e redefinir Ready local.
         PlayerLeftSession?.Invoke();
 
         NotifyLobbyChanged();
     }
 
-    private void OnPlayerPropertiesChanged()
+    private void OnPlayerPropertiesChanged(
+    ISession session)
     {
-        Debug.Log(
-            "[Lobby] ======================================="
-        );
-
-        Debug.Log(
-            "[Lobby] PlayerPropertiesChanged recebido."
-        );
+        if (!IsActiveSessionEvent(session))
+            return;
 
         if (CurrentSession != null)
         {
@@ -666,23 +708,19 @@ public class NetworkSessionManager : MonoBehaviour
             }
         }
 
-        Debug.Log(
-            "[Lobby] ======================================="
-        );
-
         NotifyLobbyChanged();
     }
 
-    private void OnRemovedFromSession()
+    private void OnRemovedFromSession(ISession session)
     {
+        if (!ReferenceEquals(session, CurrentSession))
+            return;
+
         Debug.LogWarning(
             "[Lobby] Este jogador foi removido da sessão."
         );
 
-        CurrentSession = null;
-
-        LobbyChanged?.Invoke();
-        SessionEnded?.Invoke();
+        FinalizeSession(session);
     }
 
     private void NotifyLobbyChanged()
@@ -769,6 +807,33 @@ public class NetworkSessionManager : MonoBehaviour
             readyProperty.Value,
             out bool ready
         ) && ready;
+    }
+    private bool FinalizeSession(ISession session)
+    {
+        if (session == null)
+            return false;
+
+        // Uma sessão antiga não pode finalizar a atual.
+        if (!ReferenceEquals(CurrentSession, session))
+        {
+            UnsubscribeFromSession(session);
+            return false;
+        }
+
+        // Impede finalização duplicada.
+        if (ReferenceEquals(finalizedSession, session))
+            return false;
+
+        finalizedSession = session;
+
+        UnsubscribeFromSession(session);
+
+        CurrentSession = null;
+
+        LobbyChanged?.Invoke();
+        SessionEnded?.Invoke();
+
+        return true;
     }
 
     // ---------------------------------------------------------
@@ -944,6 +1009,12 @@ public class NetworkSessionManager : MonoBehaviour
         }
 
         sessionOperationState = SessionOperationState.Idle;
+    }
+    private bool IsActiveSessionEvent(ISession session)
+    {
+        return session != null &&
+               ReferenceEquals(session, CurrentSession) &&
+               ReferenceEquals(session, subscribedSession);
     }
 }
 
