@@ -452,8 +452,6 @@ public class NetworkSessionManager : MonoBehaviour
             {
                 FinalizeSession(session);
             }
-
-            SessionEnded?.Invoke();
         }
     }
 
